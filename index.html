@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISO-IPC System — Lamasat Muscat LLC</title>
+<style>
+:root {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #1e293b;
+  --bg-surface: #334155;
+  --bg-hover: #2d3f55;
+  --accent: #0ea5e9;
+  --accent-dark: #0284c7;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border: #334155;
+  --nav-height: 60px;
+  --sidebar-width: 240px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow: 0 4px 6px -1px rgba(0,0,0,0.4);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  display: grid;
+  grid-template-rows: var(--nav-height) 1fr;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-areas: "nav nav" "sidebar main";
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── NAV ── */
+#top-nav {
+  grid-area: nav;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+  z-index: 10;
+}
+.nav-brand { display: flex; flex-direction: column; }
+.nav-brand-name { font-size: 15px; font-weight: 700; color: var(--text-primary); letter-spacing: 0.3px; }
+.nav-brand-sub { font-size: 11px; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; }
+.nav-divider { width: 1px; height: 32px; background: var(--border); }
+.nav-breadcrumb { flex: 1; font-size: 13px; color: var(--text-secondary); }
+.nav-breadcrumb span { color: var(--text-muted); margin: 0 6px; }
+.role-switcher { display: flex; gap: 4px; background: var(--bg-primary); padding: 4px; border-radius: var(--radius-md); }
+.role-pill {
+  padding: 5px 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+  letter-spacing: 0.5px;
+}
+.role-pill.active { background: var(--accent); color: #fff; }
+.role-pill:hover:not(.active) { background: var(--bg-surface); color: var(--text-primary); }
+
+/* ── SIDEBAR ── */
+#sidebar {
+  grid-area: sidebar;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 16px 0;
+}
+.sidebar-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 8px 20px 6px;
+}
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-left: 3px solid transparent;
+  user-select: none;
+}
+.sidebar-link:hover { background: var(--bg-hover); color: var(--text-primary); }
+.sidebar-link.active { background: rgba(14,165,233,0.08); color: var(--accent); border-left-color: var(--accent); }
+.sidebar-link .icon { width: 16px; height: 16px; opacity: 0.7; }
+.sidebar-project-link {
+  padding: 7px 20px 7px 32px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-left: 3px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar-project-link:hover { background: var(--bg-hover); color: var(--text-primary); }
+.sidebar-project-link.active { color: var(--accent); border-left-color: var(--accent); }
+
+/* ── MAIN ── */
+#main-content {
+  grid-area: main;
+  overflow-y: auto;
+  padding: 28px 32px;
+}
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ── PAGE HEADER ── */
+.page-header { margin-bottom: 24px; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--text-primary); }
+.page-subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.card--blocked { border-left: 4px solid var(--danger); }
+.card--at-risk { border-left: 4px solid var(--warning); }
+.card--on-track { border-left: 4px solid var(--success); }
+.card--delayed { border-left: 4px solid var(--danger); }
+
+/* ── DASHBOARD ── */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+.project-card { cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.project-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
+.project-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.project-card-name { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+.project-card-client { font-size: 12px; color: var(--text-secondary); }
+.project-card-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.project-card-stats { display: flex; gap: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.stat { display: flex; flex-direction: column; }
+.stat-value { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+.stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.iso-bar-wrap { margin-top: 10px; }
+.iso-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); margin-bottom: 5px; }
+.iso-bar-track { height: 5px; background: var(--bg-surface); border-radius: 3px; overflow: hidden; }
+.iso-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.badge--blocked { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+.badge--at-risk { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
+.badge--on-track { background: rgba(16,185,129,0.15); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
+.badge--delayed { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+.badge--pending { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
+.badge--approved { background: rgba(16,185,129,0.15); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
+.badge--rejected { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+.badge--minor { background: rgba(100,116,139,0.2); color: var(--text-secondary); border: 1px solid var(--border); }
+.badge--major { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
+.badge--critical { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+.badge--open { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+.badge--in-review { background: rgba(245,158,11,0.1); color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
+.badge--closed { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid rgba(16,185,129,0.2); }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: 0.2px;
+}
+.btn--primary { background: var(--accent); color: #fff; }
+.btn--primary:hover { background: var(--accent-dark); }
+.btn--success { background: var(--success); color: #fff; }
+.btn--success:hover { background: #059669; }
+.btn--danger { background: var(--danger); color: #fff; }
+.btn--danger:hover { background: #dc2626; }
+.btn--ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+.btn--ghost:hover { background: var(--bg-surface); color: var(--text-primary); }
+.btn--sm { padding: 5px 12px; font-size: 12px; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+/* ── PHASE TIMELINE ── */
+.phase-timeline { display: flex; flex-direction: column; gap: 8px; margin-top: 24px; }
+.phase-row {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+.phase-row--active { border-color: var(--accent); }
+.phase-row--completed { border-color: rgba(16,185,129,0.3); }
+.phase-row-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+  gap: 12px;
+  cursor: default;
+}
+.phase-row--active .phase-row-header { cursor: pointer; }
+.phase-row-header:hover .phase-row--active { background: var(--bg-hover); }
+.phase-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.phase-row--completed .phase-indicator { background: var(--success); }
+.phase-row--active .phase-indicator { background: var(--accent); box-shadow: 0 0 0 3px rgba(14,165,233,0.2); }
+.phase-row--locked .phase-indicator { background: var(--bg-surface); }
+.phase-row-name { font-size: 14px; font-weight: 600; flex: 1; }
+.phase-row--completed .phase-row-name { color: var(--text-secondary); }
+.phase-row--locked .phase-row-name { color: var(--text-muted); }
+.phase-row-right { display: flex; align-items: center; gap: 10px; }
+.lock-icon { color: var(--text-muted); font-size: 13px; }
+.phase-detail { max-height: 0; overflow: hidden; transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease; opacity: 0; }
+.phase-detail--visible { max-height: 2000px; opacity: 1; }
+.phase-detail-inner { padding: 0 18px 20px; border-top: 1px solid var(--border); }
+
+/* checklist sections */
+.checklist-section { margin-top: 18px; }
+.checklist-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+}
+.checklist-item:last-child { border-bottom: none; }
+.checklist-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.checklist-item-label { font-size: 13px; color: var(--text-secondary); flex: 1; }
+.checklist-item--done .checklist-item-label { color: var(--text-muted); text-decoration: line-through; }
+.checklist-item-ref { font-size: 11px; color: var(--text-muted); background: var(--bg-primary); padding: 2px 7px; border-radius: 3px; font-family: monospace; white-space: nowrap; }
+
+/* gate section */
+.gate-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+.gate-missing-list { margin: 12px 0; background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); border-radius: var(--radius-md); padding: 12px 16px; }
+.gate-missing-title { font-size: 12px; font-weight: 600; color: var(--danger); margin-bottom: 8px; }
+.gate-missing-item { font-size: 12px; color: #fca5a5; padding: 3px 0; display: flex; gap: 8px; }
+.gate-missing-item::before { content: "✗"; color: var(--danger); }
+.gate-rejection { margin-top: 12px; background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); border-radius: var(--radius-md); padding: 12px 16px; }
+.gate-rejection-label { font-size: 11px; font-weight: 600; color: var(--danger); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px; }
+.gate-rejection-comment { font-size: 13px; color: #fca5a5; }
+
+/* ── MODAL ── */
+#modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+#modal-overlay.open { display: flex; }
+#gate-panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 680px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+.gate-panel-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.gate-panel-title { font-size: 16px; font-weight: 700; }
+.gate-panel-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+.gate-panel-body { padding: 20px 24px; }
+.gate-panel-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  margin-top: 18px;
+}
+.gate-panel-section-title:first-child { margin-top: 0; }
+.gate-review-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+  background: var(--bg-primary);
+}
+.gate-review-item--ok { }
+.gate-review-item--fail { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15); }
+.gate-item-icon { font-size: 14px; width: 20px; text-align: center; flex-shrink: 0; }
+.gate-item-text { flex: 1; font-size: 13px; color: var(--text-secondary); }
+.gate-item-ref { font-size: 11px; color: var(--text-muted); font-family: monospace; }
+.gate-panel-footer {
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gate-comment-area {
+  width: 100%;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-size: 13px;
+  resize: vertical;
+  min-height: 70px;
+  font-family: inherit;
+}
+.gate-comment-area:focus { outline: none; border-color: var(--accent); }
+.gate-panel-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* close button */
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.close-btn:hover { color: var(--text-primary); background: var(--bg-surface); }
+
+/* ── NCR LOG ── */
+.ncr-form-card { margin-bottom: 28px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group--full { grid-column: 1 / -1; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.3px; }
+.form-input, .form-select, .form-textarea {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 9px 12px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--accent); }
+.form-select option { background: var(--bg-secondary); }
+.form-textarea { resize: vertical; min-height: 70px; }
+.form-actions { margin-top: 16px; display: flex; justify-content: flex-end; }
+
+.ncr-table { width: 100%; border-collapse: collapse; }
+.ncr-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.ncr-table td { padding: 12px 14px; font-size: 13px; border-bottom: 1px solid rgba(51,65,85,0.4); vertical-align: top; }
+.ncr-row--flagged td:first-child { border-left: 3px solid var(--danger); }
+.ncr-row--flagged { background: rgba(239,68,68,0.04); }
+.ncr-desc { color: var(--text-primary); font-size: 13px; }
+.ncr-project { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+.ncr-flag { font-size: 11px; color: var(--danger); font-weight: 600; margin-top: 4px; }
+.status-select {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  color: var(--text-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* ── KPI PANEL ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 20px;
+  text-align: center;
+}
+.kpi-value { font-size: 36px; font-weight: 800; margin-bottom: 6px; }
+.kpi-label { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+.kpi-trend { font-size: 11px; margin-top: 8px; font-weight: 600; }
+.kpi-card--good .kpi-value { color: var(--success); }
+.kpi-card--warn .kpi-value { color: var(--warning); }
+.kpi-card--danger .kpi-value { color: var(--danger); }
+.kpi-card--info .kpi-value { color: var(--accent); }
+.kpi-section-title { font-size: 14px; font-weight: 700; color: var(--text-secondary); margin: 24px 0 14px; }
+.project-kpi-table { width: 100%; border-collapse: collapse; }
+.project-kpi-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.project-kpi-table td { padding: 12px 14px; font-size: 13px; border-bottom: 1px solid rgba(51,65,85,0.4); }
+
+/* ── PHASE UNLOCK ANIMATION ── */
+@keyframes phaseUnlock {
+  0%  { background: var(--bg-card); }
+  35% { background: rgba(14,165,233,0.18); border-color: var(--accent); }
+  100%{ background: var(--bg-card); }
+}
+.phase-row--unlocking { animation: phaseUnlock 0.8s ease forwards; }
+
+/* ── ROLE VISIBILITY ── */
+.pm-only, .qhse-only, .ceo-only { display: none !important; }
+[data-role="PM"]   .pm-only   { display: inline-flex !important; }
+[data-role="QHSE"] .qhse-only { display: inline-flex !important; }
+[data-role="CEO"]  .ceo-only  { display: inline-flex !important; }
+[data-role="PM"]   .pm-block   { display: block !important; }
+[data-role="QHSE"] .qhse-block { display: block !important; }
+
+/* misc */
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+.empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); font-size: 13px; }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+</style>
+</head>
+<body data-role="PM">
+
+<!-- TOP NAV -->
+<nav id="top-nav">
+  <div class="nav-brand">
+    <span class="nav-brand-name">Lamasat Muscat LLC</span>
+    <span class="nav-brand-sub">ISO-IPC System</span>
+  </div>
+  <div class="nav-divider"></div>
+  <div class="nav-breadcrumb" id="nav-breadcrumb">Dashboard</div>
+  <div class="role-switcher">
+    <button class="role-pill active" data-role="PM" onclick="handleRoleSwitch('PM')">PM</button>
+    <button class="role-pill" data-role="QHSE" onclick="handleRoleSwitch('QHSE')">QHSE</button>
+    <button class="role-pill" data-role="CEO" onclick="handleRoleSwitch('CEO')">CEO</button>
+  </div>
+</nav>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="sidebar-section-label">Navigation</div>
+  <div class="sidebar-link active" id="nav-dashboard" onclick="handleNavClick('dashboard',null)">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </div>
+  <div class="sidebar-link" id="nav-ncr" onclick="handleNavClick('ncr',null)">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12l2 2 4-4"/></svg>
+    NCR Log
+  </div>
+  <div class="sidebar-link" id="nav-kpi" onclick="handleNavClick('kpi',null)">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    KPI Panel
+  </div>
+  <div class="divider" style="margin:12px 0;"></div>
+  <div class="sidebar-section-label">Projects</div>
+  <div id="sidebar-projects"></div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main id="main-content">
+  <div id="screen-dashboard" class="screen active"></div>
+  <div id="screen-project" class="screen"></div>
+  <div id="screen-ncr" class="screen"></div>
+  <div id="screen-kpi" class="screen"></div>
+</main>
+
+<!-- MODAL: GATE PANEL -->
+<div id="modal-overlay">
+  <div id="gate-panel"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// DATA LAYER
+// ════════════════════════════════════════
+
+const PHASE_NAMES = [
+  'Tender & Award',
+  'Design & Planning',
+  'Procurement',
+  'Execution',
+  'Commissioning',
+  'Handover'
+];
+
+const ISO_CHECKLISTS = {
+  'Tender & Award': [
+    { id: 'ta-1', ref: 'ISO 9001 §6.1',    label: 'Contract risk assessment completed' },
+    { id: 'ta-2', ref: 'ISO 9001 §8.1',    label: 'Project quality plan initiated' },
+    { id: 'ta-3', ref: 'ISO 14001 §6.1.2', label: 'Environmental aspect register started' },
+    { id: 'ta-4', ref: 'ISO 45001 §6.1.2', label: 'HIRA (Hazard Identification & Risk Assessment) initiated' },
+  ],
+  'Design & Planning': [
+    { id: 'dp-1', ref: 'ISO 9001 §8.5.1',  label: 'Inspection & Test Plan (ITP) drafted and approved' },
+    { id: 'dp-2', ref: 'ISO 14001 §8.1',   label: 'Environmental management plan approved' },
+    { id: 'dp-3', ref: 'ISO 45001 §8.2',   label: 'HSE plan with emergency response approved' },
+    { id: 'dp-4', ref: 'Project §4.1',      label: 'Baseline schedule approved and baselined' },
+  ],
+  'Procurement': [
+    { id: 'pr-1', ref: 'ISO 9001 §8.4.1',  label: 'Supplier evaluation completed' },
+    { id: 'pr-2', ref: 'ISO 9001 §8.4.3',  label: 'Material submittals approved' },
+    { id: 'pr-3', ref: 'ISO 14001 §8.1',   label: 'Environmental criteria checked for all materials' },
+    { id: 'pr-4', ref: 'Project §4.2',      label: 'Long-lead items tracked with delivery dates confirmed' },
+  ],
+  'Execution': [
+    { id: 'ex-1', ref: 'ISO 45001 §7.4',   label: 'Daily toolbox talks logged' },
+    { id: 'ex-2', ref: 'ISO 45001 §8.1.3', label: 'Permit-to-work issued and active' },
+    { id: 'ex-3', ref: 'ISO 9001 §8.5.1',  label: 'QA inspections at ITP hold-points signed off' },
+    { id: 'ex-4', ref: 'ISO 14001 §8.2',   label: 'Waste segregation log updated' },
+    { id: 'ex-5', ref: 'ISO 9001 §8.7',    label: 'NCRs raised, tracked and actioned' },
+  ],
+  'Commissioning': [
+    { id: 'co-1', ref: 'ISO 9001 §9.1.1',  label: 'Test records complete and signed' },
+    { id: 'co-2', ref: 'ISO 9001 §8.6',    label: 'Inspection reports signed by client representative' },
+    { id: 'co-3', ref: 'ISO 9001 §8.7',    label: 'All NCRs closed or formally accepted' },
+  ],
+  'Handover': [
+    { id: 'ho-1', ref: 'Project §5.1',      label: 'Snagging list cleared' },
+    { id: 'ho-2', ref: 'Project §5.2',      label: 'As-built drawings submitted' },
+    { id: 'ho-3', ref: 'Project §5.3',      label: 'O&M manuals handed over' },
+    { id: 'ho-4', ref: 'ISO 9001 §9.1.2',  label: 'Client satisfaction form completed' },
+    { id: 'ho-5', ref: 'ISO 14001 §9.1',   label: 'Final environmental compliance report submitted' },
+    { id: 'ho-6', ref: 'ISO 9001 §10.3',   label: 'Lessons learned session documented' },
+  ],
+};
+
+const TASK_TEMPLATES = {
+  'Tender & Award': [
+    { id: 'ta-t1', label: 'Review and sign contract documents' },
+    { id: 'ta-t2', label: 'Mobilise project team' },
+    { id: 'ta-t3', label: 'Set up project filing structure' },
+  ],
+  'Design & Planning': [
+    { id: 'dp-t1', label: 'Develop project execution plan' },
+    { id: 'dp-t2', label: 'Issue design drawings for review' },
+    { id: 'dp-t3', label: 'Finalise project schedule (P6/MS Project)' },
+  ],
+  'Procurement': [
+    { id: 'pr-t1', label: 'Issue RFQs to approved suppliers' },
+    { id: 'pr-t2', label: 'Evaluate and award subcontracts' },
+    { id: 'pr-t3', label: 'Submit and get approval for material submittals' },
+    { id: 'pr-t4', label: 'Track purchase orders and delivery schedules' },
+  ],
+  'Execution': [
+    { id: 'ex-t1', label: 'Subcontractor mobilization on site' },
+    { id: 'ex-t2', label: 'Structural / civil works' },
+    { id: 'ex-t3', label: 'MEP first fix installation' },
+    { id: 'ex-t4', label: 'Finishing works' },
+  ],
+  'Commissioning': [
+    { id: 'co-t1', label: 'System functional testing' },
+    { id: 'co-t2', label: 'Pre-commissioning checks' },
+    { id: 'co-t3', label: 'Client witness testing' },
+  ],
+  'Handover': [
+    { id: 'ho-t1', label: 'Prepare snagging list and close out items' },
+    { id: 'ho-t2', label: 'Compile as-built drawings package' },
+    { id: 'ho-t3', label: 'Conduct client handover meeting' },
+  ],
+};
+
+const DOC_TEMPLATES = {
+  'Tender & Award': [
+    { id: 'ta-d1', label: 'Signed Contract / LOI' },
+    { id: 'ta-d2', label: 'Project Quality Plan (draft)' },
+  ],
+  'Design & Planning': [
+    { id: 'dp-d1', label: 'ITP — Inspection & Test Plan' },
+    { id: 'dp-d2', label: 'HSE Plan' },
+    { id: 'dp-d3', label: 'Baseline Programme (PDF)' },
+  ],
+  'Procurement': [
+    { id: 'pr-d1', label: 'Supplier Evaluation Records' },
+    { id: 'pr-d2', label: 'Approved Material Submittal Register' },
+  ],
+  'Execution': [
+    { id: 'ex-d1', label: 'Method Statement' },
+    { id: 'ex-d2', label: 'Shop Drawings (latest revision)' },
+    { id: 'ex-d3', label: 'Daily Toolbox Talk Records' },
+  ],
+  'Commissioning': [
+    { id: 'co-d1', label: 'Test & Commissioning Records' },
+    { id: 'co-d2', label: 'Punch List / NCR Closure Evidence' },
+  ],
+  'Handover': [
+    { id: 'ho-d1', label: 'As-Built Drawings Package' },
+    { id: 'ho-d2', label: 'O&M Manuals' },
+    { id: 'ho-d3', label: 'Client Satisfaction Survey' },
+  ],
+};
+
+function buildPhase(phaseName, status, isoOverrides, taskOverrides, docOverrides) {
+  const isoTemplates = ISO_CHECKLISTS[phaseName];
+  const taskTpls = TASK_TEMPLATES[phaseName];
+  const docTpls = DOC_TEMPLATES[phaseName];
+
+  const iso = isoTemplates.map(t => ({
+    ...t,
+    done: isoOverrides && isoOverrides[t.id] !== undefined ? isoOverrides[t.id] : (status === 'completed')
+  }));
+  const tasks = taskTpls.map(t => ({
+    ...t,
+    done: taskOverrides && taskOverrides[t.id] !== undefined ? taskOverrides[t.id] : (status === 'completed')
+  }));
+  const docs = docTpls.map(t => ({
+    ...t,
+    uploaded: docOverrides && docOverrides[t.id] !== undefined ? docOverrides[t.id] : (status === 'completed')
+  }));
+
+  return {
+    name: phaseName,
+    status: status,
+    gateStatus: status === 'completed' ? 'approved' : 'none',
+    gateRejectionComment: '',
+    tasks,
+    documents: docs,
+    isoChecklist: iso,
+  };
+}
+
+// ── INITIAL STATE ──
+
+function buildInitialState() {
+  // Project 1: Al Mouj Villa Complex — fully on track
+  const proj1 = {
+    id: 'proj-001',
+    name: 'Al Mouj Villa Complex',
+    client: 'Al Mouj Muscat Development',
+    value: 'OMR 2.4M',
+    scheduleStatus: 'on-track',
+    activePhaseIndex: 3,
+    phases: [
+      buildPhase('Tender & Award', 'completed'),
+      buildPhase('Design & Planning', 'completed'),
+      buildPhase('Procurement', 'completed'),
+      buildPhase('Execution', 'active'),     // all done=true by default (completed status not set, but overrides all true)
+      buildPhase('Commissioning', 'locked'),
+      buildPhase('Handover', 'locked'),
+    ]
+  };
+  // Force all Execution items done for proj1
+  const ex1 = proj1.phases[3];
+  ex1.tasks.forEach(t => t.done = true);
+  ex1.documents.forEach(d => d.uploaded = true);
+  ex1.isoChecklist.forEach(i => i.done = true);
+
+  // Project 2: SMEDA Office Fit-Out — blocked gate (2 ISO items missing)
+  const proj2 = {
+    id: 'proj-002',
+    name: 'SMEDA Office Fit-Out',
+    client: 'Small & Medium Enterprises Development Authority',
+    value: 'OMR 680K',
+    scheduleStatus: 'at-risk',
+    activePhaseIndex: 3,
+    phases: [
+      buildPhase('Tender & Award', 'completed'),
+      buildPhase('Design & Planning', 'completed'),
+      buildPhase('Procurement', 'completed'),
+      buildPhase('Execution', 'active'),
+      buildPhase('Commissioning', 'locked'),
+      buildPhase('Handover', 'locked'),
+    ]
+  };
+  // Execution: all done except 2 ISO items
+  const ex2 = proj2.phases[3];
+  ex2.tasks.forEach(t => t.done = true);
+  ex2.documents.forEach(d => d.uploaded = true);
+  ex2.isoChecklist.forEach(i => i.done = true);
+  // The 2 missing items:
+  ex2.isoChecklist.find(i => i.id === 'ex-1').done = false; // Toolbox talks
+  ex2.isoChecklist.find(i => i.id === 'ex-2').done = false; // Permit-to-work
+
+  // Project 3: PDO Pipeline Repair — delayed, open NCRs
+  const proj3 = {
+    id: 'proj-003',
+    name: 'PDO Pipeline Repair',
+    client: 'Petroleum Development Oman',
+    value: 'OMR 1.1M',
+    scheduleStatus: 'delayed',
+    activePhaseIndex: 2,
+    phases: [
+      buildPhase('Tender & Award', 'completed'),
+      buildPhase('Design & Planning', 'completed'),
+      buildPhase('Procurement', 'active'),
+      buildPhase('Execution', 'locked'),
+      buildPhase('Commissioning', 'locked'),
+      buildPhase('Handover', 'locked'),
+    ]
+  };
+  // Procurement: partially done
+  const pr3 = proj3.phases[2];
+  pr3.tasks[0].done = true;
+  pr3.tasks[1].done = true;
+  pr3.tasks[2].done = false;
+  pr3.tasks[3].done = false;
+  pr3.documents[0].uploaded = true;
+  pr3.documents[1].uploaded = false;
+  pr3.isoChecklist[0].done = true;
+  pr3.isoChecklist[1].done = false;
+  pr3.isoChecklist[2].done = false;
+  pr3.isoChecklist[3].done = false;
+
+  const ncrs = [
+    {
+      id: 'ncr-001',
+      projectId: 'proj-003',
+      projectName: 'PDO Pipeline Repair',
+      phase: 'Procurement',
+      description: 'Subcontractor supplied non-conforming pipe fittings (Class 300 instead of Class 600 as specified)',
+      severity: 'critical',
+      assignedTo: 'Mohammed Al Balushi',
+      dueDate: '2026-05-05',
+      raisedDate: '2026-04-25',
+      status: 'open',
+    },
+    {
+      id: 'ncr-002',
+      projectId: 'proj-003',
+      projectName: 'PDO Pipeline Repair',
+      phase: 'Procurement',
+      description: 'Cathodic protection documentation missing from supplier datasheet package',
+      severity: 'major',
+      assignedTo: 'Fatma Al Rashdi',
+      dueDate: '2026-05-15',
+      raisedDate: '2026-05-05',
+      status: 'in-review',
+    },
+  ];
+
+  return {
+    currentRole: 'PM',
+    currentScreen: 'dashboard',
+    currentProjectId: null,
+    gatePanel: { open: false, projectId: null, phaseIndex: null },
+    gateCheckErrors: [],
+    projects: [proj1, proj2, proj3],
+    ncrs,
+    nextNcrId: 3,
+  };
+}
+
+let state = buildInitialState();
+
+// ════════════════════════════════════════
+// BUSINESS LOGIC
+// ════════════════════════════════════════
+
+function isNcrAutoFlagged(ncr) {
+  if (ncr.status !== 'open') return false;
+  const days = (new Date('2026-05-08') - new Date(ncr.raisedDate)) / 86400000;
+  return days > 7;
+}
+
+function runGateCheck(projectId, phaseIndex) {
+  const project = state.projects.find(p => p.id === projectId);
+  const phase = project.phases[phaseIndex];
+  const missing = [];
+
+  phase.tasks.forEach(t => {
+    if (!t.done) missing.push({ type: 'task', label: t.label });
+  });
+  phase.documents.forEach(d => {
+    if (!d.uploaded) missing.push({ type: 'document', label: d.label });
+  });
+  phase.isoChecklist.forEach(i => {
+    if (!i.done) missing.push({ type: 'iso', ref: i.ref, label: i.label });
+  });
+  if (phase.name === 'Commissioning') {
+    const openNcrs = state.ncrs.filter(n => n.projectId === projectId && n.status !== 'closed');
+    if (openNcrs.length > 0) {
+      missing.push({ type: 'ncr', label: `${openNcrs.length} open NCR(s) must be closed before Commissioning gate` });
+    }
+  }
+  return { pass: missing.length === 0, missing };
+}
+
+function computeKPIs() {
+  const allPhases = state.projects.flatMap(p => p.phases);
+  const completedPhases = allPhases.filter(ph => ph.status === 'completed');
+  // ISO completion: all active + completed phases
+  const relevantPhases = allPhases.filter(ph => ph.status !== 'locked');
+  let isoTotal = 0, isoDone = 0;
+  relevantPhases.forEach(ph => {
+    ph.isoChecklist.forEach(i => { isoTotal++; if (i.done) isoDone++; });
+  });
+  const isoCompletionPct = isoTotal > 0 ? Math.round((isoDone / isoTotal) * 100) : 0;
+  const openNcrCount = state.ncrs.filter(n => n.status !== 'closed').length;
+  return {
+    onTimeRate: 83,
+    openNcrCount,
+    isoCompletionPct,
+    daysSinceHseIncident: 47,
+  };
+}
+
+function getIsoScore(project) {
+  const relevantPhases = project.phases.filter(ph => ph.status !== 'locked');
+  let total = 0, done = 0;
+  relevantPhases.forEach(ph => {
+    ph.isoChecklist.forEach(i => { total++; if (i.done) done++; });
+  });
+  return total > 0 ? Math.round((done / total) * 100) : 100;
+}
+
+function getOpenNcrCount(projectId) {
+  return state.ncrs.filter(n => n.projectId === projectId && n.status !== 'closed').length;
+}
+
+function isProjectBlocked(project) {
+  const active = project.phases[project.activePhaseIndex];
+  if (!active) return false;
+  const check = runGateCheck(project.id, project.activePhaseIndex);
+  return !check.pass;
+}
+
+// ════════════════════════════════════════
+// RENDERERS
+// ════════════════════════════════════════
+
+function renderNav() {
+  const crumb = document.getElementById('nav-breadcrumb');
+  if (state.currentScreen === 'dashboard') {
+    crumb.textContent = 'Dashboard';
+  } else if (state.currentScreen === 'project' && state.currentProjectId) {
+    const p = state.projects.find(x => x.id === state.currentProjectId);
+    crumb.innerHTML = `<span style="color:var(--text-muted)">Dashboard</span><span>›</span>${p ? p.name : ''}`;
+  } else if (state.currentScreen === 'ncr') {
+    crumb.textContent = 'NCR Log';
+  } else if (state.currentScreen === 'kpi') {
+    crumb.textContent = 'KPI Panel';
+  }
+  document.querySelectorAll('.role-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.role === state.currentRole);
+  });
+  document.body.setAttribute('data-role', state.currentRole);
+}
+
+function renderSidebar() {
+  ['dashboard','ncr','kpi'].forEach(name => {
+    document.getElementById(`nav-${name}`).classList.toggle('active', state.currentScreen === name);
+  });
+  const container = document.getElementById('sidebar-projects');
+  container.innerHTML = state.projects.map(p => `
+    <div class="sidebar-project-link${state.currentProjectId === p.id && state.currentScreen === 'project' ? ' active' : ''}"
+         onclick="handleNavClick('project','${p.id}')">${p.name}</div>
+  `).join('');
+}
+
+function renderDashboard() {
+  const container = document.getElementById('screen-dashboard');
+  const kpis = computeKPIs();
+
+  const cards = state.projects.map(p => {
+    const isoScore = getIsoScore(p);
+    const openNcrs = getOpenNcrCount(p.id);
+    const blocked = isProjectBlocked(p);
+    const activePhaseName = p.phases[p.activePhaseIndex]?.name || '—';
+    const schedClass = blocked ? 'blocked' : p.scheduleStatus.replace('-','').replace('track','on-track').replace('risk','at-risk');
+    // derive border class
+    const borderClass = blocked ? 'card--blocked' : (p.scheduleStatus === 'on-track' ? 'card--on-track' : p.scheduleStatus === 'at-risk' ? 'card--at-risk' : 'card--delayed');
+    const isoBarColor = isoScore >= 80 ? 'var(--success)' : isoScore >= 60 ? 'var(--warning)' : 'var(--danger)';
+
+    return `
+    <div class="card project-card ${borderClass}" onclick="handleNavClick('project','${p.id}')">
+      <div class="project-card-header">
+        <div>
+          <div class="project-card-name">${p.name}</div>
+          <div class="project-card-client">${p.client}</div>
+        </div>
+        ${blocked ? '<span class="badge badge--blocked">⛔ GATE BLOCKED</span>' : ''}
+      </div>
+      <div class="project-card-meta">
+        <span class="badge badge--${p.scheduleStatus === 'on-track' ? 'on-track' : p.scheduleStatus === 'at-risk' ? 'at-risk' : 'delayed'}">
+          ${p.scheduleStatus === 'on-track' ? '✓ On Track' : p.scheduleStatus === 'at-risk' ? '⚠ At Risk' : '✗ Delayed'}
+        </span>
+        <span class="badge" style="background:rgba(14,165,233,0.1);color:var(--accent);border:1px solid rgba(14,165,233,0.2);">${activePhaseName}</span>
+        ${openNcrs > 0 ? `<span class="badge badge--${openNcrs > 1 ? 'critical' : 'major'}">${openNcrs} Open NCR${openNcrs > 1 ? 's' : ''}</span>` : ''}
+      </div>
+      <div class="iso-bar-wrap">
+        <div class="iso-bar-label"><span>ISO Compliance</span><span>${isoScore}%</span></div>
+        <div class="iso-bar-track"><div class="iso-bar-fill" style="width:${isoScore}%;background:${isoBarColor};"></div></div>
+      </div>
+      <div class="project-card-stats" style="margin-top:14px;">
+        <div class="stat"><span class="stat-value">${p.value}</span><span class="stat-label">Contract Value</span></div>
+        <div class="stat"><span class="stat-value">${p.activePhaseIndex + 1}/6</span><span class="stat-label">Phase</span></div>
+        <div class="stat"><span class="stat-value" style="color:${openNcrs > 0 ? 'var(--danger)' : 'var(--success)'}">${openNcrs}</span><span class="stat-label">Open NCRs</span></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="page-header">
+      <div class="page-title">Project Dashboard</div>
+      <div class="page-subtitle">Live overview — ${state.projects.length} active projects · ISO compliance monitored across all phases</div>
+    </div>
+    <div class="dashboard-grid">${cards}</div>
+    <div class="card" style="border-left:4px solid var(--accent);">
+      <div style="display:flex;gap:32px;align-items:center;">
+        <div><div style="font-size:11px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Portfolio ISO Compliance</div>
+          <div style="font-size:28px;font-weight:800;color:var(--accent);">${kpis.isoCompletionPct}%</div></div>
+        <div><div style="font-size:11px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Open NCRs</div>
+          <div style="font-size:28px;font-weight:800;color:${kpis.openNcrCount > 0 ? 'var(--danger)' : 'var(--success)'};">${kpis.openNcrCount}</div></div>
+        <div><div style="font-size:11px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">On-Time Rate</div>
+          <div style="font-size:28px;font-weight:800;color:var(--success);">${kpis.onTimeRate}%</div></div>
+        <div><div style="font-size:11px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">HSE Days Since Incident</div>
+          <div style="font-size:28px;font-weight:800;color:var(--success);">${kpis.daysSinceHseIncident}</div></div>
+      </div>
+    </div>`;
+}
+
+function renderProjectView() {
+  const project = state.projects.find(p => p.id === state.currentProjectId);
+  if (!project) return;
+  const container = document.getElementById('screen-project');
+
+  const phasesHtml = project.phases.map((phase, idx) => {
+    const isActive = phase.status === 'active';
+    const isCompleted = phase.status === 'completed';
+    const isLocked = phase.status === 'locked';
+    const gateBadge = phase.gateStatus === 'approved' ? '<span class="badge badge--approved">Gate Approved</span>'
+      : phase.gateStatus === 'pending' ? '<span class="badge badge--pending">Gate Pending</span>'
+      : phase.gateStatus === 'rejected' ? '<span class="badge badge--rejected">Gate Rejected</span>'
+      : '';
+
+    let detailHtml = '';
+    if (isActive) {
+      // Tasks
+      const taskRows = phase.tasks.map(t => `
+        <div class="checklist-item${t.done ? ' checklist-item--done' : ''}">
+          <input type="checkbox" ${t.done ? 'checked' : ''}
+            data-project-id="${project.id}" data-phase-index="${idx}"
+            data-item-type="task" data-item-id="${t.id}">
+          <span class="checklist-item-label">${t.label}</span>
+        </div>`).join('');
+
+      // Documents
+      const docRows = phase.documents.map(d => `
+        <div class="checklist-item${d.uploaded ? ' checklist-item--done' : ''}">
+          <input type="checkbox" ${d.uploaded ? 'checked' : ''}
+            data-project-id="${project.id}" data-phase-index="${idx}"
+            data-item-type="doc" data-item-id="${d.id}">
+          <span class="checklist-item-label">${d.label}</span>
+        </div>`).join('');
+
+      // ISO Checklist
+      const isoRows = phase.isoChecklist.map(i => `
+        <div class="checklist-item${i.done ? ' checklist-item--done' : ''}">
+          <input type="checkbox" ${i.done ? 'checked' : ''}
+            data-project-id="${project.id}" data-phase-index="${idx}"
+            data-item-type="iso" data-item-id="${i.id}">
+          <div style="flex:1;display:flex;align-items:center;gap:10px;">
+            <span class="checklist-item-label">${i.label}</span>
+            <span class="checklist-item-ref">${i.ref}</span>
+          </div>
+        </div>`).join('');
+
+      // Gate section
+      const gateErrors = state.gateCheckErrors;
+      const missingHtml = gateErrors.length > 0 ? `
+        <div class="gate-missing-list">
+          <div class="gate-missing-title">Gate blocked — ${gateErrors.length} item(s) incomplete:</div>
+          ${gateErrors.map(m => `<div class="gate-missing-item">${m.ref ? `[${m.ref}] ` : ''}${m.label}</div>`).join('')}
+        </div>` : '';
+
+      const rejectionHtml = phase.gateStatus === 'rejected' ? `
+        <div class="gate-rejection">
+          <div class="gate-rejection-label">QHSE Rejection Comment</div>
+          <div class="gate-rejection-comment">${phase.gateRejectionComment || 'No comment provided.'}</div>
+        </div>` : '';
+
+      const signOffBtn = `<button class="btn btn--primary pm-only" style="display:none;"
+          data-action="request-signoff" data-project-id="${project.id}" data-phase-index="${idx}">
+          Request Phase Sign-Off
+        </button>`;
+
+      detailHtml = `
+        <div class="phase-detail phase-detail--visible" id="detail-phase-${idx}">
+          <div class="phase-detail-inner">
+            <div class="checklist-section">
+              <div class="checklist-title">Tasks</div>${taskRows}
+            </div>
+            <div class="checklist-section">
+              <div class="checklist-title">Required Documents</div>${docRows}
+            </div>
+            <div class="checklist-section">
+              <div class="checklist-title">ISO Compliance Checklist</div>${isoRows}
+            </div>
+            <div class="gate-section">
+              ${missingHtml}${rejectionHtml}
+              <div style="margin-top:12px;">${signOffBtn}</div>
+            </div>
+          </div>
+        </div>`;
+    } else if (isCompleted) {
+      const isoCount = phase.isoChecklist.length;
+      detailHtml = `<div class="phase-detail" id="detail-phase-${idx}"></div>`;
+    } else {
+      detailHtml = `<div class="phase-detail" id="detail-phase-${idx}"></div>`;
+    }
+
+    const lockIcon = isLocked ? '<span class="lock-icon">🔒</span>' : '';
+    const expandHint = isActive ? '<span style="font-size:11px;color:var(--text-muted);">▼ expanded</span>' : '';
+
+    return `
+    <div class="phase-row phase-row--${phase.status}" id="phase-row-${idx}">
+      <div class="phase-row-header" ${isActive ? `onclick="togglePhaseDetail(${idx})"` : ''}>
+        <div class="phase-indicator"></div>
+        <span class="phase-row-name">${phase.name}</span>
+        <div class="phase-row-right">
+          ${gateBadge}${lockIcon}${expandHint}
+          ${isCompleted ? '<span style="color:var(--success);font-size:18px;">✓</span>' : ''}
+        </div>
+      </div>
+      ${detailHtml}
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;cursor:pointer;" onclick="handleNavClick('dashboard',null)">← Back to Dashboard</div>
+        <div class="page-title">${project.name}</div>
+        <div class="page-subtitle">${project.client} · ${project.value} ·
+          <span class="badge badge--${project.scheduleStatus === 'on-track' ? 'on-track' : project.scheduleStatus === 'at-risk' ? 'at-risk' : 'delayed'}" style="font-size:11px;">
+            ${project.scheduleStatus === 'on-track' ? '✓ On Track' : project.scheduleStatus === 'at-risk' ? '⚠ At Risk' : '✗ Delayed'}
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="phase-timeline">${phasesHtml}</div>`;
+}
+
+function renderGatePanel() {
+  const overlay = document.getElementById('modal-overlay');
+  if (!state.gatePanel.open) { overlay.classList.remove('open'); return; }
+
+  const { projectId, phaseIndex } = state.gatePanel;
+  const project = state.projects.find(p => p.id === projectId);
+  const phase = project.phases[phaseIndex];
+  const check = runGateCheck(projectId, phaseIndex);
+
+  const itemsHtml = (label, items, isDone) => items.map(item => {
+    const ok = isDone(item);
+    return `<div class="gate-review-item gate-review-item--${ok ? 'ok' : 'fail'}">
+      <span class="gate-item-icon">${ok ? '✅' : '❌'}</span>
+      <span class="gate-item-text">${item.label || item.name}</span>
+      ${item.ref ? `<span class="gate-item-ref">${item.ref}</span>` : ''}
+    </div>`;
+  }).join('');
+
+  const allItemsHtml = `
+    <div class="gate-panel-section-title">Tasks</div>
+    ${itemsHtml('Tasks', phase.tasks, t => t.done)}
+    <div class="gate-panel-section-title">Required Documents</div>
+    ${itemsHtml('Documents', phase.documents, d => d.uploaded)}
+    <div class="gate-panel-section-title">ISO Compliance Checklist</div>
+    ${itemsHtml('ISO', phase.isoChecklist, i => i.done)}`;
+
+  const statusBadge = check.pass
+    ? '<span class="badge badge--approved">All items complete — ready for approval</span>'
+    : `<span class="badge badge--blocked">${check.missing.length} item(s) incomplete</span>`;
+
+  document.getElementById('gate-panel').innerHTML = `
+    <div class="gate-panel-header">
+      <div>
+        <div class="gate-panel-title">Gate Review — ${phase.name}</div>
+        <div class="gate-panel-subtitle">${project.name} · ${statusBadge}</div>
+      </div>
+      <button class="close-btn" onclick="closeGatePanel()">✕</button>
+    </div>
+    <div class="gate-panel-body">${allItemsHtml}</div>
+    <div class="gate-panel-footer qhse-block" style="display:none;">
+      <textarea id="gate-comment" class="gate-comment-area" placeholder="Add a comment for the PM (required if rejecting)…"></textarea>
+      <div class="gate-panel-actions">
+        <button class="btn btn--ghost btn--sm" onclick="closeGatePanel()">Cancel</button>
+        <button class="btn btn--danger btn--sm" onclick="handleGateReject()">Reject</button>
+        <button class="btn btn--success btn--sm" onclick="handleGateApprove()">Approve Gate</button>
+      </div>
+    </div>
+    <div class="gate-panel-footer pm-block" style="display:none;">
+      <div style="font-size:13px;color:var(--text-secondary);">Awaiting QHSE officer review. Switch to QHSE role to approve.</div>
+      <div class="gate-panel-actions"><button class="btn btn--ghost btn--sm" onclick="closeGatePanel()">Close</button></div>
+    </div>`;
+
+  overlay.classList.add('open');
+}
+
+function renderNcrLog() {
+  const container = document.getElementById('screen-ncr');
+  const projectOptions = state.projects.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+  const phaseOptions = PHASE_NAMES.map(n => `<option value="${n}">${n}</option>`).join('');
+
+  const ncrRows = state.ncrs.map(ncr => {
+    const flagged = isNcrAutoFlagged(ncr);
+    const daysOpen = ncr.status !== 'closed'
+      ? Math.floor((new Date('2026-05-08') - new Date(ncr.raisedDate)) / 86400000)
+      : null;
+    return `
+    <tr class="ncr-row${flagged ? ' ncr-row--flagged' : ''}">
+      <td>
+        <div class="ncr-desc">${ncr.description}</div>
+        <div class="ncr-project">${ncr.projectName} · ${ncr.phase}</div>
+        ${flagged ? `<div class="ncr-flag">⚠ Auto-flagged: ${daysOpen} days open (overdue)</div>` : ''}
+      </td>
+      <td><span class="badge badge--${ncr.severity}">${ncr.severity.charAt(0).toUpperCase() + ncr.severity.slice(1)}</span></td>
+      <td style="color:var(--text-secondary);font-size:12px;">${ncr.assignedTo}</td>
+      <td style="color:var(--text-secondary);font-size:12px;">${ncr.dueDate}</td>
+      <td>
+        <select class="status-select" data-ncr-id="${ncr.id}" onchange="handleNcrStatusChange('${ncr.id}',this.value)">
+          <option value="open" ${ncr.status==='open'?'selected':''}>Open</option>
+          <option value="in-review" ${ncr.status==='in-review'?'selected':''}>In Review</option>
+          <option value="closed" ${ncr.status==='closed'?'selected':''}>Closed</option>
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="page-header">
+      <div class="page-title">NCR Log</div>
+      <div class="page-subtitle">Non-Conformance Reports across all projects</div>
+    </div>
+    <div class="card ncr-form-card pm-block" style="display:none;">
+      <div style="font-size:14px;font-weight:700;margin-bottom:16px;">Raise New NCR</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Project</label>
+          <select id="ncr-project" class="form-select">${projectOptions}</select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phase</label>
+          <select id="ncr-phase" class="form-select">${phaseOptions}</select>
+        </div>
+        <div class="form-group form-group--full">
+          <label class="form-label">Description</label>
+          <textarea id="ncr-desc" class="form-textarea" placeholder="Describe the non-conformance…"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Severity</label>
+          <select id="ncr-severity" class="form-select">
+            <option value="minor">Minor</option>
+            <option value="major">Major</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Assigned To</label>
+          <input id="ncr-assigned" type="text" class="form-input" placeholder="Name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Due Date</label>
+          <input id="ncr-due" type="date" class="form-input" value="2026-05-20">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn--primary" onclick="handleAddNcr()">Raise NCR</button>
+      </div>
+    </div>
+    <div class="card">
+      <table class="ncr-table">
+        <thead><tr>
+          <th>Description</th><th>Severity</th><th>Assigned To</th><th>Due Date</th><th>Status</th>
+        </tr></thead>
+        <tbody>${ncrRows || '<tr><td colspan="5" class="empty-state">No NCRs raised yet.</td></tr>'}</tbody>
+      </table>
+    </div>`;
+}
+
+function renderKpiPanel() {
+  const container = document.getElementById('screen-kpi');
+  const kpis = computeKPIs();
+
+  const projectRows = state.projects.map(p => {
+    const isoScore = getIsoScore(p);
+    const openNcrs = getOpenNcrCount(p.id);
+    const phaseName = p.phases[p.activePhaseIndex]?.name || '—';
+    return `<tr>
+      <td style="font-weight:600;">${p.name}</td>
+      <td><span class="badge badge--${p.scheduleStatus === 'on-track' ? 'on-track' : p.scheduleStatus === 'at-risk' ? 'at-risk' : 'delayed'}">${p.scheduleStatus}</span></td>
+      <td>${phaseName}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="iso-bar-track" style="width:80px;"><div class="iso-bar-fill" style="width:${isoScore}%;background:${isoScore>=80?'var(--success)':isoScore>=60?'var(--warning)':'var(--danger)'};"></div></div>
+          <span style="font-size:13px;font-weight:600;">${isoScore}%</span>
+        </div>
+      </td>
+      <td style="color:${openNcrs>0?'var(--danger)':'var(--success)'}; font-weight:${openNcrs>0?'700':'400'};">${openNcrs}</td>
+    </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="page-header">
+      <div class="page-title">KPI Panel</div>
+      <div class="page-subtitle">Live performance metrics — recalculates on every state change</div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-card--good">
+        <div class="kpi-value">${kpis.onTimeRate}%</div>
+        <div class="kpi-label">On-Time Phase Completion Rate</div>
+        <div class="kpi-trend" style="color:var(--success);">↑ +3% vs last quarter</div>
+      </div>
+      <div class="kpi-card kpi-card--${kpis.openNcrCount > 2 ? 'danger' : kpis.openNcrCount > 0 ? 'warn' : 'good'}">
+        <div class="kpi-value">${kpis.openNcrCount}</div>
+        <div class="kpi-label">Open Non-Conformance Reports</div>
+        <div class="kpi-trend" style="color:${kpis.openNcrCount>0?'var(--warning)':'var(--success)'};">${kpis.openNcrCount > 0 ? '⚠ Action required' : '✓ All closed'}</div>
+      </div>
+      <div class="kpi-card kpi-card--${kpis.isoCompletionPct >= 80 ? 'good' : kpis.isoCompletionPct >= 60 ? 'warn' : 'danger'}">
+        <div class="kpi-value">${kpis.isoCompletionPct}%</div>
+        <div class="kpi-label">ISO Checklist Completion (active phases)</div>
+        <div class="kpi-trend" style="color:var(--text-muted);">Across all 3 active projects</div>
+      </div>
+      <div class="kpi-card kpi-card--good">
+        <div class="kpi-value">${kpis.daysSinceHseIncident}</div>
+        <div class="kpi-label">Days Since Last HSE Incident</div>
+        <div class="kpi-trend" style="color:var(--success);">✓ Excellent safety record</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="kpi-section-title">Per-Project Breakdown</div>
+      <table class="project-kpi-table">
+        <thead><tr><th>Project</th><th>Schedule</th><th>Active Phase</th><th>ISO Compliance</th><th>Open NCRs</th></tr></thead>
+        <tbody>${projectRows}</tbody>
+      </table>
+    </div>`;
+}
+
+function render() {
+  renderNav();
+  renderSidebar();
+  // Show correct screen
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  if (state.currentScreen === 'dashboard') {
+    renderDashboard();
+    document.getElementById('screen-dashboard').classList.add('active');
+  } else if (state.currentScreen === 'project') {
+    renderProjectView();
+    document.getElementById('screen-project').classList.add('active');
+  } else if (state.currentScreen === 'ncr') {
+    renderNcrLog();
+    document.getElementById('screen-ncr').classList.add('active');
+  } else if (state.currentScreen === 'kpi') {
+    renderKpiPanel();
+    document.getElementById('screen-kpi').classList.add('active');
+  }
+  renderGatePanel();
+}
+
+// ════════════════════════════════════════
+// EVENT HANDLERS
+// ════════════════════════════════════════
+
+function handleRoleSwitch(role) {
+  state.currentRole = role;
+  render();
+}
+
+function handleNavClick(screen, projectId) {
+  state.currentScreen = screen;
+  state.currentProjectId = projectId;
+  state.gateCheckErrors = [];
+  render();
+}
+
+function togglePhaseDetail(idx) {
+  // Already rendered as visible for active phase; clicking header toggles
+  const detail = document.getElementById(`detail-phase-${idx}`);
+  if (detail) detail.classList.toggle('phase-detail--visible');
+}
+
+function handleCheckboxChange(event) {
+  const el = event.target;
+  if (el.type !== 'checkbox') return;
+  const { projectId, phaseIndex, itemType, itemId } = el.dataset;
+  if (!projectId) return;
+
+  const project = state.projects.find(p => p.id === projectId);
+  const phase = project.phases[parseInt(phaseIndex)];
+
+  if (itemType === 'task') {
+    const item = phase.tasks.find(t => t.id === itemId);
+    if (item) item.done = el.checked;
+  } else if (itemType === 'doc') {
+    const item = phase.documents.find(d => d.id === itemId);
+    if (item) item.uploaded = el.checked;
+  } else if (itemType === 'iso') {
+    const item = phase.isoChecklist.find(i => i.id === itemId);
+    if (item) item.done = el.checked;
+  }
+  // Clear gate errors on any check
+  state.gateCheckErrors = [];
+  render();
+}
+
+function handleButtonClick(event) {
+  const btn = event.target.closest('[data-action]');
+  if (!btn) return;
+  const action = btn.dataset.action;
+  if (action === 'request-signoff') {
+    const projectId = btn.dataset.projectId;
+    const phaseIndex = parseInt(btn.dataset.phaseIndex);
+    handleRequestSignOff(projectId, phaseIndex);
+  }
+}
+
+function handleRequestSignOff(projectId, phaseIndex) {
+  const result = runGateCheck(projectId, phaseIndex);
+  if (!result.pass) {
+    state.gateCheckErrors = result.missing;
+    render();
+    return;
+  }
+  state.gateCheckErrors = [];
+  const project = state.projects.find(p => p.id === projectId);
+  project.phases[phaseIndex].gateStatus = 'pending';
+  state.gatePanel = { open: true, projectId, phaseIndex };
+  render();
+}
+
+function closeGatePanel() {
+  state.gatePanel = { open: false, projectId: null, phaseIndex: null };
+  render();
+}
+
+function handleGateApprove() {
+  const { projectId, phaseIndex } = state.gatePanel;
+  const project = state.projects.find(p => p.id === projectId);
+  const phase = project.phases[phaseIndex];
+
+  phase.gateStatus = 'approved';
+  phase.status = 'completed';
+
+  const nextIdx = phaseIndex + 1;
+  if (nextIdx < project.phases.length) {
+    project.phases[nextIdx].status = 'active';
+    project.activePhaseIndex = nextIdx;
+  }
+
+  state.gatePanel = { open: false, projectId: null, phaseIndex: null };
+  state.gateCheckErrors = [];
+  render();
+
+  // Trigger unlock animation on the newly active phase
+  setTimeout(() => {
+    const row = document.getElementById(`phase-row-${nextIdx}`);
+    if (row) {
+      row.classList.add('phase-row--unlocking');
+      setTimeout(() => row.classList.remove('phase-row--unlocking'), 900);
+    }
+  }, 120);
+}
+
+function handleGateReject() {
+  const { projectId, phaseIndex } = state.gatePanel;
+  const comment = document.getElementById('gate-comment')?.value?.trim() || '';
+  const project = state.projects.find(p => p.id === projectId);
+  const phase = project.phases[phaseIndex];
+
+  phase.gateStatus = 'rejected';
+  phase.gateRejectionComment = comment || 'No comment provided.';
+
+  state.gatePanel = { open: false, projectId: null, phaseIndex: null };
+  render();
+}
+
+function handleNcrStatusChange(ncrId, newStatus) {
+  const ncr = state.ncrs.find(n => n.id === ncrId);
+  if (ncr) ncr.status = newStatus;
+  render();
+}
+
+function handleAddNcr() {
+  const projectId = document.getElementById('ncr-project')?.value;
+  const phase = document.getElementById('ncr-phase')?.value;
+  const description = document.getElementById('ncr-desc')?.value?.trim();
+  const severity = document.getElementById('ncr-severity')?.value;
+  const assignedTo = document.getElementById('ncr-assigned')?.value?.trim();
+  const dueDate = document.getElementById('ncr-due')?.value;
+
+  if (!description || !assignedTo) {
+    alert('Please fill in the Description and Assigned To fields.');
+    return;
+  }
+
+  const project = state.projects.find(p => p.id === projectId);
+  state.nextNcrId = (state.nextNcrId || 10) + 1;
+  state.ncrs.push({
+    id: `ncr-${state.nextNcrId}`,
+    projectId,
+    projectName: project?.name || projectId,
+    phase,
+    description,
+    severity,
+    assignedTo,
+    dueDate,
+    raisedDate: '2026-05-08',
+    status: 'open',
+  });
+  render();
+}
+
+// Delegated listener
+document.getElementById('main-content').addEventListener('change', handleCheckboxChange);
+document.getElementById('main-content').addEventListener('click', handleButtonClick);
+
+// Init
+render();
+</script>
+</body>
+</html>
